@@ -13,10 +13,10 @@ export default function Home() {
 		<Layout
 			main={
 				<div className="flex">
-					<div className="w-1/2 pb-4" style={{ maxHeight: 'calc(100vh - 64px)', overflowX: 'auto' }}>
+					<div className="w-1/3 pb-4" style={{ maxHeight: 'calc(100vh - 64px)', overflowX: 'auto' }}>
 						House list
 					</div>
-					<div className="w-1/2">
+					<div className="w-2/3">
 						<Map />
 					</div>
 				</div>
