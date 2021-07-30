@@ -15,7 +15,7 @@ export default function Map({}: IProps) {
 		latitude: 43,
 		longitude: -79,
 		zoom: 10,
-		bearing: 80,
+		bearing: 0,
 		pitch: 80,
 	})
 
