@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { useState, useEffect, ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
-// import { useMutation, gql } from "@apollo/client";
+import { useMutation, gql } from '@apollo/client'
 // import { useRouter } from "next/router";
 // import { Image } from "cloudinary-react";
 import { SearchBox } from './searchBox'
@@ -13,7 +13,16 @@ import { SearchBox } from './searchBox'
 //   UpdateHouseMutation,
 //   UpdateHouseMutationVariables,
 // } from "src/generated/UpdateHouseMutation";
-// import { CreateSignatureMutation } from "src/generated/CreateSignatureMutation";
+import { CreateSignatureMutation } from 'src/generated/CreateSignatureMutation'
+
+const SIGNATURE_MUTATION = gql`
+	mutation CreateSignatureMutation {
+		createImageSignature {
+			signature
+			timestamp
+		}
+	}
+`
 
 interface IFormData {
 	address: string
@@ -25,6 +34,26 @@ interface IFormData {
 
 interface IProps {}
 
+interface IUploadImageResponse {
+	secure_url: string
+}
+
+async function uploadImage(image: File, signature: string, timestamp: number): Promise<IUploadImageResponse> {
+	const url = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`
+
+	const formData = new FormData()
+	formData.append('file', image)
+	formData.append('signature', signature)
+	formData.append('timestamp', timestamp.toString())
+	formData.append('api_key', process.env.NEXT_PUBLIC_CLOUDINARY_KEY ?? '')
+
+	const response = await fetch(url, {
+		method: 'post',
+		body: formData,
+	})
+	return response.json()
+}
+
 export default function HouseForm({}: IProps) {
 	const [submitting, setSubmitting] = useState(false)
 	const [previewImage, setPreviewImage] = useState<string>()
@@ -32,6 +61,7 @@ export default function HouseForm({}: IProps) {
 	const { register, handleSubmit, setValue, errors, watch } = useForm<IFormData>({ defaultValues: {} })
 
 	const address = watch('address')
+	const [createSignature] = useMutation<CreateSignatureMutation>(SIGNATURE_MUTATION)
 
 	useEffect(() => {
 		register({ name: 'address' }, { required: 'Please enter your address' })
@@ -40,8 +70,14 @@ export default function HouseForm({}: IProps) {
 	}, [register])
 
 	const handleCreate = async (data: IFormData) => {
-		// do smth
-		console.log(data)
+		const { data: signatureData } = await createSignature()
+
+		if (signatureData) {
+			console.log(signatureData)
+			const { signature, timestamp } = signatureData.createImageSignature
+
+			const imageData = await uploadImage(data.image[0], signature, timestamp)
+		}
 	}
 
 	const onSubmit = (data: IFormData) => {
